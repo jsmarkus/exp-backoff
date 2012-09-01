@@ -1,6 +1,3 @@
-var ETIMEOUT = 'ETIMEOUT'
-	, ERETRY = 'ERETRY'
-;
 /**
 * @param {Function} func
 * @param {Object} options
@@ -77,8 +74,5 @@ function expBackoff(func, options) {
 	};
 	return next;
 }
-
-expBackoff.ETIMEOUT = ETIMEOUT;
-expBackoff.ERETRY = ERETRY;
 
 module.exports = expBackoff;
