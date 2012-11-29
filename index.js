@@ -8,71 +8,81 @@
 * options.timeout - timeout
 */
 function expBackoff(func, options) {
-	options = options || {};
-	var   delay    = undefined === options.delay ?
-						100 : options.delay
-		, factor   = undefined === options.factor ?
-						2   : options.factor
-		, maxDelay = undefined === options.maxDelay ?
-						false : options.maxDelay
-		, retryLimit = undefined === options.retryLimit ?
-						false : options.retryLimit
-		, currentDelay = delay
-		, timeout = undefined === options.timeout ?
-						false : options.timeout
-		, i = 0
-		, totalTime = currentDelay
-		, retryCount = 1
-		, next
-	;
+    options = options || {};
+    var   delay    = (undefined === options.delay) ?
+                        100 : options.delay
+        , factor   = (undefined === options.factor) ?
+                        2   : options.factor
+        , maxDelay = (undefined === options.maxDelay) ?
+                        false : options.maxDelay
+        , retryLimit = (undefined === options.retryLimit) ?
+                        false : options.retryLimit
+        , currentDelay = delay
+        , timeout = (undefined === options.timeout) ?
+                        false : options.timeout
+        , onRetry = options.onRetry
+        , totalTime = currentDelay
+        , retryCount = 1
+        , next
+    ;
 
 
-	next = function () {
-		var oldArguments = arguments
-			, funcLength = arguments.length
-			, callback = arguments[funcLength-1]
-			, callbackLength = callback.length
-			, argsWithoutCallback = Array.prototype.slice.call(
-					arguments, 0, funcLength - 1)
-			, newArguments
-			, context = this
-			, retry
-			, newCallback
-		;
+    next = function () {
+        var oldArguments = arguments
+            , funcLength = arguments.length
+            , callback = arguments[funcLength-1]
+            , argsWithoutCallback = Array.prototype.slice.call(
+                    arguments, 0, funcLength - 1)
+            , newArguments
+            , context = this
+            , retry
+            , newCallback
+        ;
 
-		retry = function () {
-			setTimeout(function () {
-				next.apply(context, oldArguments);
-			}, currentDelay);
-			currentDelay *= factor;
-			if(false !== maxDelay
-				&& currentDelay > maxDelay) {
-				currentDelay = maxDelay
-			}
-			totalTime += currentDelay;
-			retryCount++;
-		
-		};
+        retry = function () {
+            if ('function' === typeof onRetry) {
+                onRetry.call(context, {
+                    currentDelay : currentDelay,
+                    retryCount : retryCount
+                });
+            }
 
-		newCallback = function (err) {
-			if(err) {
-				if(false !== retryLimit && retryLimit > 0
-					&& retryCount >= retryLimit) {
-					callback(err);
-				} else if(false !== timeout && timeout > 0
-					&& totalTime > timeout) {
-					callback(err);
-				} else {
-					retry();
-				}
-			} else {
-				callback.apply(null, arguments);
-			}
-		}
-		newArguments = argsWithoutCallback.concat([newCallback]);
-		func.apply(context, newArguments);
-	};
-	return next;
+            setTimeout(function () {
+                next.apply(context, oldArguments);
+            }, currentDelay);
+
+            currentDelay *= factor;
+
+            if(false !== maxDelay && currentDelay > maxDelay) {
+                currentDelay = maxDelay;
+            }
+
+            totalTime += currentDelay;
+            retryCount++;
+        };
+
+        newCallback = function (err) {
+            if(err) {
+                if(false !== retryLimit &&
+                    retryLimit > 0 &&
+                    retryCount >= retryLimit) {
+                    callback(err);
+                } else if(false !== timeout && timeout > 0 &&
+                    totalTime > timeout) {
+                    callback(err);
+                } else {
+                    retry();
+                }
+            } else {
+                callback.apply(null, arguments);
+            }
+        };
+
+        newArguments = argsWithoutCallback.concat([newCallback]);
+
+        func.apply(context, newArguments);
+    };
+    return next;
 }
 
 module.exports = expBackoff;

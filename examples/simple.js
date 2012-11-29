@@ -1,12 +1,19 @@
 var expBackoff = require('../')
-, nthSuccess = require('./helper').nthSuccess
+    , nthSuccess = require('./helper').nthSuccess
 ;
 
-var nthSuccessRetry = expBackoff(nthSuccess(5), {
+var onRetry = function (options) {
+	console.log('Retrying in ',options.currentDelay,'ms. ',
+		'Tried ',options.retryCount,'times');
+};
+
+var nthSuccessRetry = expBackoff(nthSuccess(10), {
 	delay  : 100,
-	//timeout  : 150,
+	// timeout  : 150,
 	//retryLimit : 2,
-	factor : 2
+	maxDelay : 2000,
+	factor : 2,
+	onRetry : onRetry
 });
 
 nthSuccessRetry(function (err) {
