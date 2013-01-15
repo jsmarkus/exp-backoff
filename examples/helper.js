@@ -12,4 +12,9 @@ var nthSuccess = function (n) {
 	}());
 };
 
+var critical = function (cb) {
+	cb('critical');
+};
+
 exports.nthSuccess = nthSuccess;
+exports.critical = critical;

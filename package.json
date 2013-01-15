@@ -1,6 +1,6 @@
 {
 	"name" : "exp-backoff"
-	, "version" : "0.0.2"
+	, "version" : "0.0.3"
 	, "author" : "jsmarkus"
 	, "description" : "Simple asynchronous exponential backoff util for Node.js and CommonJS"
 	, "keywords" : ["async", "flow", "retry", "backoff"]

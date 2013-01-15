@@ -39,12 +39,17 @@ function expBackoff(func, options) {
             , newCallback
         ;
 
-        retry = function () {
+        retry = function (err) {
             if ('function' === typeof onRetry) {
-                onRetry.call(context, {
+                var retryResult = onRetry.call(context, {
+                    lastError : err,
                     currentDelay : currentDelay,
                     retryCount : retryCount
                 });
+            }
+            if(retryResult === false) {
+                callback(err);
+                return;
             }
 
             setTimeout(function () {
@@ -71,7 +76,7 @@ function expBackoff(func, options) {
                     totalTime > timeout) {
                     callback(err);
                 } else {
-                    retry();
+                    retry(err);
                 }
             } else {
                 callback.apply(null, arguments);
